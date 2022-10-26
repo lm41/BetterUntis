@@ -20,11 +20,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.sapuseven.untis.R
 import com.sapuseven.untis.data.databases.UserDatabase
 import com.sapuseven.untis.helpers.config.globalDataStore
+import com.sapuseven.untis.helpers.config.preferenceDataStore
 import com.sapuseven.untis.helpers.timetable.TimetableDatabaseInterface
 import com.sapuseven.untis.preferences.dataStorePreferences
 import com.sapuseven.untis.ui.common.conditional
@@ -32,11 +34,15 @@ import com.sapuseven.untis.ui.functional.bottomInsets
 import com.sapuseven.untis.ui.material.scheme.Scheme
 import com.sapuseven.untis.ui.theme.generateColorScheme
 import com.sapuseven.untis.ui.theme.toColorScheme
+import io.sentry.Sentry
+import io.sentry.SentryOptions
+import io.sentry.android.core.SentryAndroid
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.io.File
 
 @SuppressLint("Registered") // This activity is not intended to be used directly
 open class BaseComposeActivity : ComponentActivity() {
@@ -59,7 +65,32 @@ open class BaseComposeActivity : ComponentActivity() {
 			loadInitialUser()
 		}
 
+		SentryAndroid.init(this) { options ->
+			options.dsn = "https://d3b77222abce4fcfa74fda2185e0f8dc@o1136770.ingest.sentry.io/6188900"
+			options.tracesSampleRate = 1.0
+			options.cacheDirPath = File(filesDir, "logs").absolutePath
+			options.beforeSend = SentryOptions.BeforeSendCallback { event, hint ->
+				runBlocking {
+					globalDataStore.edit { prefs ->
+						prefs[stringPreferencesKey("crash")] = event.eventId.toString()
+					}
+				}
+				event
+			}
+		}
+
 		super.onCreate(savedInstanceState)
+
+		runBlocking {
+			val sentryId = globalDataStore.data.map { it[stringPreferencesKey("crash")] }.first()
+			if (Sentry.isCrashedLastRun() == true && sentryId != null){
+				TODO("Add functionality")
+			}
+		}
+
+
+
+
 
 		WindowCompat.setDecorFitsSystemWindows(window, false)
 	}
