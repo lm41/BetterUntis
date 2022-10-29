@@ -65,32 +65,7 @@ open class BaseComposeActivity : ComponentActivity() {
 			loadInitialUser()
 		}
 
-		SentryAndroid.init(this) { options ->
-			options.dsn = "https://d3b77222abce4fcfa74fda2185e0f8dc@o1136770.ingest.sentry.io/6188900"
-			options.tracesSampleRate = 1.0
-			options.cacheDirPath = File(filesDir, "logs").absolutePath
-			options.beforeSend = SentryOptions.BeforeSendCallback { event, hint ->
-				runBlocking {
-					globalDataStore.edit { prefs ->
-						prefs[stringPreferencesKey("crash")] = event.eventId.toString()
-					}
-				}
-				event
-			}
-		}
-
 		super.onCreate(savedInstanceState)
-
-		runBlocking {
-			val sentryId = globalDataStore.data.map { it[stringPreferencesKey("crash")] }.first()
-			if (Sentry.isCrashedLastRun() == true && sentryId != null){
-				TODO("Add functionality")
-			}
-		}
-
-
-
-
 
 		WindowCompat.setDecorFitsSystemWindows(window, false)
 	}

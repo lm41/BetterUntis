@@ -48,6 +48,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.sapuseven.untis.R
 import com.sapuseven.untis.activities.SettingsActivity.Companion.EXTRA_STRING_PREFERENCE_HIGHLIGHT
 import com.sapuseven.untis.activities.SettingsActivity.Companion.EXTRA_STRING_PREFERENCE_ROUTE
@@ -88,12 +89,17 @@ import com.sapuseven.untis.views.weekview.listeners.ScaleListener
 import com.sapuseven.untis.views.weekview.listeners.ScrollListener
 import com.sapuseven.untis.views.weekview.listeners.TopLeftCornerClickListener
 import com.sapuseven.untis.views.weekview.loaders.WeekViewLoader
+import io.sentry.Sentry
+import io.sentry.SentryLevel
+import io.sentry.SentryOptions
+import io.sentry.android.core.SentryAndroid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.joda.time.*
 import org.joda.time.format.DateTimeFormat
+import java.io.File
 import java.lang.ref.WeakReference
 import java.util.*
 import kotlin.math.max
@@ -143,6 +149,27 @@ class MainActivity :
 	@OptIn(ExperimentalMaterial3Api::class)
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+
+		SentryAndroid.init(this) { options ->
+			options.dsn = "https://d3b77222abce4fcfa74fda2185e0f8dc@o1136770.ingest.sentry.io/6188900"
+			options.tracesSampleRate = 1.0
+			options.cacheDirPath = File(filesDir, "logs").absolutePath
+			options.beforeSend = SentryOptions.BeforeSendCallback { event, hint ->
+				when (event.level){
+					SentryLevel.ERROR -> {
+						event
+					}
+					SentryLevel.FATAL -> {
+						event
+					}
+					else -> {
+						null
+					}
+				}
+			}
+		}
+
+
 
 		//setupNotifications()
 
@@ -658,6 +685,7 @@ class MainActivity :
 				}
 			)
 		}
+
 	}
 
 	private fun login() {
