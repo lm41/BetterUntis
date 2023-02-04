@@ -12,6 +12,7 @@ import io.sentry.Hint
 import io.sentry.SentryEvent
 import io.sentry.SentryOptions
 import io.sentry.android.core.SentryAndroid
+import java.io.File
 
 class App : Application(), Configuration.Provider {
 	override fun getWorkManagerConfiguration() =
@@ -23,6 +24,9 @@ class App : Application(), Configuration.Provider {
 		super.onCreate()
 		WorkManager.getInstance(applicationContext).enqueue(OneTimeWorkRequestBuilder<DailyWorker>().build())
 		SentryAndroid.init(this) { options ->
+			options.release = "3.5.1-DEBUG"
+			options.tracesSampleRate = 1.0
+			options.cacheDirPath = File(filesDir, "logs").absolutePath
 			options.dsn = "https://d3b77222abce4fcfa74fda2185e0f8dc@o1136770.ingest.sentry.io/6188900"
 			options.beforeSend = SentryOptions.BeforeSendCallback { event: SentryEvent, hint: Hint ->
 				when ((event.throwable as TimetableLoader.TimetableLoaderException).untisErrorCode) {
@@ -40,6 +44,8 @@ class App : Application(), Configuration.Provider {
 				* }
 				*
 				* The captured exception is then been proccessed as event in the BeforeSendCallback
+				* TODO: Implement ErrorsActivity to add user feedback
+				* TODO: Implement Sentry preference to opt out / opt in to the usage sentry
 				* */
 			}
 		}
