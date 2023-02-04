@@ -88,6 +88,7 @@ import com.sapuseven.untis.views.weekview.listeners.ScaleListener
 import com.sapuseven.untis.views.weekview.listeners.ScrollListener
 import com.sapuseven.untis.views.weekview.listeners.TopLeftCornerClickListener
 import com.sapuseven.untis.views.weekview.loaders.WeekViewLoader
+import io.sentry.Sentry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -962,6 +963,7 @@ class MainAppState @OptIn(ExperimentalMaterial3Api::class) constructor(
 					)
 				}
 			} catch (e: TimetableLoader.TimetableLoaderException) {
+				Sentry.captureException(e)
 				Log.e(
 					"MainActivity",
 					e.untisErrorMessage ?: e.message ?: "unknown error"
